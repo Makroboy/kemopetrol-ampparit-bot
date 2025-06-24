@@ -67,7 +67,7 @@ def main():
     new_titles = [t for t in current_titles if t not in previous_titles]
 
     if new_titles:
-        print(f"\ud83d\udd14 {len(new_titles)} uutta osumaa \u2013 l\u00e4hetet\u00e4\u00e4n Telegramiin...")
+        print(f"{len(new_titles)} uutta osumaa – lähetetään Telegramiin...")
         send_telegram(new_titles)
         save_titles(current_titles)
     else:
