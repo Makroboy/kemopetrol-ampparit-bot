@@ -49,7 +49,6 @@ def main():
     current_titles_set = set(title for title, _ in current_titles)
 
     new_titles = [(title, url) for title, url in current_titles if title not in seen_titles]
-    new_titles.append(("TESTI: Tämä on testi-ilmoitus", "https://example.com"))
     
     if new_titles:
         print(f"🔔 {len(new_titles)} uutta osumaa, lähetetään Telegramiin...")
