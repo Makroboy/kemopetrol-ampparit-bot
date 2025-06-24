@@ -1,78 +1,63 @@
-# kemobot.py
+import os
+import time
 import requests
 from bs4 import BeautifulSoup
-import json
-import os
+import sys
 
-SEARCH_URL = "https://www.ampparit.com/haku?q=kemopetrol"
-DATA_FILE = "latest_results.json"
+sys.stdout.reconfigure(encoding='utf-8')
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+SEARCH_URL = "https://www.ampparit.com/haku?q=kemopetrol"
+SEEN_TITLES_FILE = "seen_titles.txt"
 
-print("DEBUG: BOT_TOKEN =", os.environ.get("TELEGRAM_BOT_TOKEN"))
-print("DEBUG: CHAT_ID =", os.environ.get("TELEGRAM_CHAT_ID"))
+def load_seen_titles():
+    if os.path.exists(SEEN_TITLES_FILE):
+        with open(SEEN_TITLES_FILE, "r", encoding="utf-8") as f:
+            return set(line.strip() for line in f.readlines())
+    return set()
+
+def save_seen_titles(titles):
+    with open(SEEN_TITLES_FILE, "w", encoding="utf-8") as f:
+        for title in titles:
+            f.write(title + "\n")
 
 def fetch_titles():
-    r = requests.get(SEARCH_URL)
-    soup = BeautifulSoup(r.text, "html.parser")
-    articles = soup.find_all("a", class_="news-item-headline")
-
-    results = []
-    for a in articles:
-        title = a.text.strip()
-        href = a.get("href")
-        if title and href:
-            if href.startswith("/"):
-                href = f"https://www.ampparit.com{href}"
-            results.append(f"{title}\n{href}")
-    return results
-
-
-def load_previous():
-    if not os.path.exists(DATA_FILE):
-        return []
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
-
-
-def save_titles(titles):
-    with open(DATA_FILE, "w") as f:
-        json.dump(titles, f)
-
+    response = requests.get(SEARCH_URL)
+    soup = BeautifulSoup(response.text, "html.parser")
+    links = soup.find_all("a", class_="news-item-headline")
+    return [(link.text.strip(), link["href"]) for link in links]
 
 def send_telegram(new_titles):
-    text = "\ud83d\udcf0 *Uusia Kemopetrol-osumia Ampparitissa:*\n\n"
-    text += "\n\n".join(new_titles)
-
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": text,
-        "parse_mode": "Markdown"
-    }
-
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    response = requests.post(url, data=payload)
-
-    if response.status_code == 200:
-        print("\u2705 Telegram-ilmoitus l\u00e4hetetty.")
-    else:
-        print("\u274c Virhe Telegram-ilmoituksessa:", response.text)
-
+    for title, url in new_titles:
+        message = f"🆕 {title}\n🔗 {url}"
+        safe_payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message.encode("utf-8", "surrogatepass").decode("utf-8"),
+        }
+        response = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            data=safe_payload
+        )
+        print(f"✅ Lähetetty: {title} ({response.status_code})")
 
 def main():
-    print("\u23f3 Tarkistetaan uudet osumat...")
+    print(f"DEBUG: BOT_TOKEN = {'*' * len(TELEGRAM_BOT_TOKEN)}")
+    print(f"DEBUG: CHAT_ID = {'*' * len(TELEGRAM_CHAT_ID)}")
+    print("⏳ Tarkistetaan uudet osumat...")
+
+    seen_titles = load_seen_titles()
     current_titles = fetch_titles()
-    previous_titles = load_previous()
-    new_titles = [t for t in current_titles if t not in previous_titles]
+    current_titles_set = set(title for title, _ in current_titles)
+
+    new_titles = [(title, url) for title, url in current_titles if title not in seen_titles]
 
     if new_titles:
-        print(f"{len(new_titles)} uutta osumaa – lähetetään Telegramiin...")
+        print(f"🔔 {len(new_titles)} uutta osumaa, lähetetään Telegramiin...")
         send_telegram(new_titles)
-        save_titles(current_titles)
+        save_seen_titles(current_titles_set)
     else:
-        print("\u2705 Ei uusia osumia.")
-
+        print("👌 Ei uusia osumia.")
 
 if __name__ == "__main__":
     main()
