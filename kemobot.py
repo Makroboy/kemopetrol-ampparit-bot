@@ -1,5 +1,4 @@
 import os
-import time
 import requests
 from bs4 import BeautifulSoup
 import sys
@@ -18,9 +17,10 @@ def load_seen_titles():
     return set()
 
 def save_seen_titles(titles):
-    with open(SEEN_TITLES_FILE, "w", encoding="utf-8") as f:
-        for title in titles:
-            f.write(title + "\n")
+    if titles:
+        with open(SEEN_TITLES_FILE, "w", encoding="utf-8") as f:
+            for title in sorted(titles):
+                f.write(title + "\n")
 
 def fetch_titles():
     response = requests.get(SEARCH_URL)
@@ -49,13 +49,15 @@ def main():
     current_titles_set = set(title for title, _ in current_titles)
 
     new_titles = [(title, url) for title, url in current_titles if title not in seen_titles]
-    
+
     if new_titles:
         print(f"🔔 {len(new_titles)} uutta osumaa, lähetetään Telegramiin...")
         send_telegram(new_titles)
-        save_seen_titles(seen_titles.union(current_titles_set))
+        save_seen_titles(current_titles_set)
     else:
         print("👌 Ei uusia osumia.")
+        # Tallennetaan nykyinen tilanne myös, vaikka uusia ei tullut
+        save_seen_titles(current_titles_set)
 
 if __name__ == "__main__":
     main()
