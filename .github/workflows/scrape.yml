@@ -19,6 +19,12 @@ jobs:
           name: seen-titles
         continue-on-error: true
 
+      - name: Move seen_titles.txt to project root
+        run: |
+          if [ -f seen-titles/seen_titles.txt ]; then
+            mv seen-titles/seen_titles.txt seen_titles.txt
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
