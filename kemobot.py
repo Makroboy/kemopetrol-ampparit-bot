@@ -53,7 +53,7 @@ def main():
     if new_titles:
         print(f"🔔 {len(new_titles)} uutta osumaa, lähetetään Telegramiin...")
         send_telegram(new_titles)
-        save_seen_titles(current_titles_set)
+        save_seen_titles(seen_titles.union(current_titles_set))
     else:
         print("👌 Ei uusia osumia.")
 
