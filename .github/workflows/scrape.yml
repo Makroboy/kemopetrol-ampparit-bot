@@ -13,18 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Restore seen_titles.txt from artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: seen-titles
-        continue-on-error: true
-
-      - name: Move seen_titles.txt to project root
-        run: |
-          if [ -f seen-titles/seen_titles.txt ]; then
-            mv seen-titles/seen_titles.txt seen_titles.txt
-          fi
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -38,10 +26,3 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
-      - name: Upload seen_titles.txt as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: seen-titles
-          path: seen_titles.txt
