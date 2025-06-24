@@ -10,6 +10,8 @@ DATA_FILE = "latest_results.json"
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
+print("DEBUG: BOT_TOKEN =", os.environ.get("TELEGRAM_BOT_TOKEN"))
+print("DEBUG: CHAT_ID =", os.environ.get("TELEGRAM_CHAT_ID"))
 
 def fetch_titles():
     r = requests.get(SEARCH_URL)
