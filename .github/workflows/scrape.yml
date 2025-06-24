@@ -2,18 +2,22 @@ name: Kemobot Checker
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/10 * * * *'  # Joka 10. minuutti
   workflow_dispatch:
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Restore seen_titles.txt from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: seen-titles
+        continue-on-error: true
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,3 +29,13 @@ jobs:
 
       - name: Run scraper
         run: python kemobot.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Upload seen_titles.txt as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seen-titles
+          path: seen_titles.txt
