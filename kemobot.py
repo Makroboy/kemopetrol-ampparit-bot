@@ -42,8 +42,6 @@ def send_telegram(new_titles):
         print(f"✅ Lähetetty: {title} ({response.status_code})")
 
 def main():
-    print(f"DEBUG: BOT_TOKEN = {'*' * len(TELEGRAM_BOT_TOKEN)}")
-    print(f"DEBUG: CHAT_ID = {'*' * len(TELEGRAM_CHAT_ID)}")
     print("⏳ Tarkistetaan uudet osumat...")
 
     seen_titles = load_seen_titles()
